@@ -36,6 +36,11 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   provider:
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  charts_flutter: ^0.12.0
+  flutter_heatmap_calendar: ^1.0.5
+  flutter_slidable: ^0.5.3
 
 dev_dependencies:
   flutter_test:

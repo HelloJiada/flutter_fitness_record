@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_fitness_record/data/hive_database.dart';
+import 'package:flutter_fitness_record/datetime/date_time.dart';
 import 'package:flutter_fitness_record/models/exercise.dart';
 import 'package:flutter_fitness_record/models/workout.dart';
 
-class WorkoutData extends ChangeNotifier{
+class WorkoutData extends ChangeNotifier {
+  final db = HiveDatabase();
+
   List<Workout> workoutList = [
-    Workout(name: "Upper Body", exercises: [
-      Exercise(
-        name: "Bicep Curls",
-        weight: "10",
-        reps: "10",
-        sets: "3",
-      ),
-    ])
+    Workout(
+      name: "全身运动",
+      exercises: [
+      ],
+    ),
+    
   ];
+
+  void initializeWorkoutList() {
+    if (db.previousDataExists()) {
+      workoutList = db.readFormDataBase();
+    } else {
+      db.saveToDatabase(workoutList);
+    }
+    loadHeadMap();
+  }
 
   List<Workout> getWorkoutList() {
     return workoutList;
@@ -26,6 +37,7 @@ class WorkoutData extends ChangeNotifier{
   void addWorkout(String name) {
     workoutList.add(Workout(name: name, exercises: []));
     notifyListeners();
+    db.saveToDatabase(workoutList);
   }
 
   void addExercise(String workoutName, String exerciseName, String weight,
@@ -39,12 +51,15 @@ class WorkoutData extends ChangeNotifier{
       sets: sets,
     ));
     notifyListeners();
+    db.saveToDatabase(workoutList);
   }
 
   void checkOffExercise(String workoutName, String exerciseName) {
     Exercise relevantExercise = getRelevantExercise(workoutName, exerciseName);
     relevantExercise.isCompleted = !relevantExercise.isCompleted;
     notifyListeners();
+    db.saveToDatabase(workoutList);
+    loadHeadMap();
   }
 
   Workout getRelevantWorkout(String workoutName) {
@@ -53,11 +68,33 @@ class WorkoutData extends ChangeNotifier{
     return relevantWorkout;
   }
 
-Exercise getRelevantExercise(String workoutName, String exerciseName) {
+  Exercise getRelevantExercise(String workoutName, String exerciseName) {
+    Workout relevantWorkout = getRelevantWorkout(workoutName);
+    Exercise relevantExercise = relevantWorkout.exercises
+        .firstWhere((exercise) => exercise.name == exerciseName);
+    return relevantExercise;
+  }
 
-  Workout relevantWorkout = getRelevantWorkout(workoutName);
-  Exercise relevantExercise = relevantWorkout.exercises.firstWhere((exercise) => exercise.name == exerciseName);
-  return relevantExercise;
-}
+  String getStartDate() {
+    return db.getStartDate();
+  }
 
+Map<DateTime, int> headMapDataSet = {};
+
+  void loadHeadMap() {
+    DateTime startDate = createDateTimeObject(getStartDate());
+    int daysInBetween = DateTime.now().difference(startDate).inDays;
+    for (var i = 0; i < daysInBetween + 1; i++) {
+      String yyyymmdd = convertDateTimeYYYYMMDD(startDate.add(Duration(days: i)));
+      int completionStatus = db.getCompletionStatus(yyyymmdd);
+      int year = startDate.add(Duration(days: i)).year;
+      int month = startDate.add(Duration(days: i)).month;
+      int day = startDate.add(Duration(days: i)).day;
+      final percentForEachDay = <DateTime, int>{
+        DateTime(year, month, day): completionStatus
+      };
+      headMapDataSet.addEntries(percentForEachDay.entries);
+      
+    }
+  }
 }

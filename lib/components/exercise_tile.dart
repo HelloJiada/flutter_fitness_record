@@ -21,16 +21,19 @@ class ExerciseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      
       color: Colors.grey[200],
       child: ListTile(
         title: Text(exerciseName),
         subtitle: Row(
           children: [
             Chip(
-              label: Text(weight+'\kg'),
+              label: Text('$weight 斤'),
             ),
-            Chip(label: Text(reps + '\reps'),),
-            Chip(label: Text(sets + '\sets'),),
+            const SizedBox(width: 10,),
+            Chip(label: Text('$reps 次'),),
+            const SizedBox(width: 10,),
+            Chip(label: Text('$sets 组'),),
           ],
         ),
         trailing: Checkbox(value: isCompleted, onChanged:(value) => onCheckBoxChanged!(value),),
